@@ -2,656 +2,759 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#070307">
 <title>まうと話すう♥</title>
+<!-- html2canvas for screenshot -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&display=swap');
 
+/* ===== トークン =====  */
 :root {
-  --pink: #f0a0c0;
-  --pink-deep: #c0607a;
-  --card: rgba(12,4,10,0.86);
+  --pink:        #f0a0c0;
+  --pink-deep:   #c0607a;
+  --pink-glow:   rgba(240,160,192,0.35);
+  --pink-border: rgba(240,160,192,0.22);
+  --black:       #070307;
+  --surface:     rgba(12,4,10,0.92);
+  --surface2:    rgba(18,6,15,0.78);
+  --text:        #fce8f2;
+  --textsub:     rgba(240,160,192,0.52);
+  --user-bg:     rgba(90,50,120,0.3);
+  --user-bd:     rgba(180,130,220,0.25);
+  --safe-b:      env(safe-area-inset-bottom, 0px);
+  --safe-t:      env(safe-area-inset-top, 0px);
 }
 
-* { margin: 0; padding: 0; box-sizing: border-box; }
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none;}
 
-body {
-  font-family: 'Zen Maru Gothic', sans-serif;
-  background: #0a0005;
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: hidden;
+body{
+  font-family:'Zen Maru Gothic',sans-serif;
+  background:var(--black);
+  display:flex;
+  justify-content:center;
 }
 
-#app {
-  position: relative;
-  width: 100vw;
-  max-width: 480px;
-  height: 100vh;
-  max-height: 900px;
-  overflow: hidden;
+/* ===== アプリ ===== */
+#app{
+  position:relative;
+  width:100vw;
+  max-width:480px;
+  height:100vh;
+  height:100dvh;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
 }
 
-/* ===== 背景 =====
-   sprite_bg.png: 1536×1024 / 3列×2行
-   各パネル: 512×512px
-   background-size: 300% 200% で各パネルが画面全体に伸びる */
-#bg {
-  position: absolute;
-  inset: 0;
-  background-image: url('sprite_bg.png');
-  background-size: 300% 200%;
-  background-position: 0% 0%;
-  background-repeat: no-repeat;
-  transition: background-position 0.8s cubic-bezier(0.4,0,0.2,1);
+/* ===== 背景 ===== */
+#bg{
+  position:absolute;inset:0;
+  background-image:url('sprite_bg.png');
+  background-size:300% 200%;
+  background-position:0% 0%;
+  background-repeat:no-repeat;
+  transition:background-position 1.1s cubic-bezier(.4,0,.2,1);
+  z-index:0;
 }
-
-#bg::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to bottom,
-    rgba(8,0,12,0.45) 0%,
-    rgba(8,0,12,0.3) 30%,
-    rgba(8,0,12,0.6) 60%,
-    rgba(8,0,12,0.97) 100%
+#bg-ov{
+  position:absolute;inset:0;
+  background:linear-gradient(180deg,
+    rgba(5,0,8,.58) 0%,
+    rgba(5,0,8,.28) 20%,
+    rgba(5,0,8,.48) 52%,
+    rgba(5,0,8,.94) 75%,
+    rgba(5,0,8,.99) 100%
   );
-}
-
-/* ===== 好感度ゲージ ===== */
-#gauge-wrap {
-  position: absolute;
-  top: 14px;
-  left: 14px;
-  right: 14px;
-  z-index: 20;
-}
-
-#gauge-label {
-  font-size: 10px;
-  color: rgba(240,160,192,0.7);
-  margin-bottom: 3px;
-  letter-spacing: 0.08em;
-}
-
-#gauge-bar-bg {
-  height: 6px;
-  background: rgba(255,255,255,0.07);
-  border-radius: 3px;
-  overflow: hidden;
-  border: 1px solid rgba(240,160,192,0.15);
-}
-
-#gauge-bar {
-  height: 100%;
-  width: 50%;
-  background: linear-gradient(90deg, #c0607a, #f0a0c0);
-  border-radius: 3px;
-  transition: width 0.6s cubic-bezier(0.34,1.56,0.64,1);
-  box-shadow: 0 0 8px rgba(240,160,192,0.4);
-}
-
-#gauge-hearts {
-  margin-top: 3px;
-  font-size: 11px;
-  letter-spacing: 1px;
-  color: var(--pink);
+  z-index:1;
 }
 
 /* ===== ヘッダー ===== */
-#header {
-  position: absolute;
-  top: 56px;
-  left: 0; right: 0;
-  text-align: center;
-  z-index: 20;
+#hdr{
+  position:relative;z-index:10;
+  padding:calc(var(--safe-t) + 10px) 14px 8px;
+  display:flex;align-items:center;gap:10px;
+  background:linear-gradient(180deg,rgba(5,0,8,.7) 0%,transparent 100%);
 }
 
-#mau-name {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--pink);
-  text-shadow: 0 0 12px rgba(240,160,192,0.7);
+#gauge-wrap{flex:1;min-width:0;}
+#gauge-lbl{font-size:8px;color:var(--textsub);letter-spacing:.1em;margin-bottom:3px;}
+#gauge-track{height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;border:1px solid rgba(240,160,192,.1);}
+#gauge-fill{height:100%;width:50%;border-radius:2px;background:linear-gradient(90deg,#c0607a,#f0a0c0);box-shadow:0 0 5px rgba(240,160,192,.4);transition:width .7s cubic-bezier(.34,1.56,.64,1);}
+#gauge-hearts{margin-top:3px;font-size:8px;letter-spacing:1px;color:var(--pink);}
+
+/* 残り会話数バッジ */
+#quota-badge{
+  font-size:8px;color:rgba(240,160,192,.5);
+  background:rgba(240,160,192,.07);
+  border:1px solid rgba(240,160,192,.12);
+  border-radius:6px;padding:2px 7px;margin-top:3px;
+  display:inline-block;
 }
 
-#mau-status {
-  font-size: 10px;
-  color: rgba(240,160,192,0.6);
-  margin-top: 3px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
+#profile{display:flex;align-items:center;gap:7px;flex-shrink:0;}
+#prof-text{text-align:right;}
+#mau-name{font-size:13px;font-weight:700;color:var(--pink);text-shadow:0 0 8px rgba(240,160,192,.5);}
+#mau-st{font-size:8px;color:var(--textsub);display:flex;align-items:center;justify-content:flex-end;gap:3px;margin-top:2px;}
+.ondot{width:5px;height:5px;background:#4ade80;border-radius:50%;box-shadow:0 0 4px #4ade80;animation:glow 2s ease-in-out infinite;}
+@keyframes glow{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.6;transform:scale(1.5);}}
+
+/* ヘッダーアイコン */
+#h-icon{width:36px;height:36px;border-radius:50%;overflow:hidden;border:1.5px solid var(--pink-border);box-shadow:0 0 14px var(--pink-glow);position:relative;flex-shrink:0;}
+#h-icon-img{position:absolute;width:400%;height:400%;background-image:url('sprite_face.png');background-size:100% 100%;background-repeat:no-repeat;top:-8%;left:0%;transition:left .3s ease,top .3s ease;}
+
+/* シーンラベル */
+#scene-lbl{position:absolute;top:14px;left:14px;font-size:8px;color:rgba(240,160,192,.28);z-index:12;pointer-events:none;}
+
+/* ===== ツールバー（右上） ===== */
+#toolbar{
+  position:absolute;top:calc(var(--safe-t) + 10px);right:10px;
+  display:flex;gap:6px;z-index:15;
+}
+.tb-btn{
+  width:30px;height:30px;
+  background:rgba(12,4,10,.7);
+  border:1px solid rgba(240,160,192,.18);
+  border-radius:8px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;transition:all .15s;
+  backdrop-filter:blur(6px);
+}
+.tb-btn:active{transform:scale(.88);}
+
+/* ===== チャットログ ===== */
+#chat-scroll{
+  flex:1;overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
+  padding:6px 12px 10px;
+  display:flex;flex-direction:column;gap:9px;
+  position:relative;z-index:10;
+  scroll-behavior:smooth;
+}
+#chat-scroll::-webkit-scrollbar{width:2px;}
+#chat-scroll::-webkit-scrollbar-thumb{background:rgba(240,160,192,.14);border-radius:1px;}
+
+/* ===== メッセージ ===== */
+.msg{display:flex;align-items:flex-end;gap:7px;animation:fadeUp .22s ease;}
+.msg.user{flex-direction:row-reverse;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(7px);}to{opacity:1;transform:translateY(0);}}
+
+/* まうアイコン（発言横） */
+.micon{width:26px;height:26px;border-radius:50%;overflow:hidden;border:1px solid var(--pink-border);flex-shrink:0;position:relative;box-shadow:0 0 7px rgba(192,96,122,.22);}
+.micon-img{position:absolute;width:400%;height:400%;background-image:url('sprite_face.png');background-size:100% 100%;background-repeat:no-repeat;top:-8%;left:0%;transition:left .3s ease,top .3s ease;}
+.msg.user .micon{background:rgba(80,40,100,.3);border-color:var(--user-bd);display:flex;align-items:center;justify-content:center;font-size:13px;}
+
+.bwrap{max-width:76%;display:flex;flex-direction:column;gap:2px;}
+.msg.user .bwrap{align-items:flex-end;}
+.sname{font-size:8px;color:var(--textsub);padding:0 4px;letter-spacing:.04em;}
+.bubble{padding:9px 12px;font-size:13px;line-height:1.8;word-break:break-word;white-space:pre-wrap;position:relative;}
+.msg.bot .bubble{background:var(--surface);border:1px solid var(--pink-border);border-radius:4px 13px 13px 13px;color:var(--text);backdrop-filter:blur(6px);}
+.msg.user .bubble{background:var(--user-bg);border:1px solid var(--user-bd);border-radius:13px 4px 13px 13px;color:#ede0ff;backdrop-filter:blur(6px);}
+.mtime{font-size:7px;color:rgba(240,160,192,.2);padding:0 4px;}
+
+/* ハートリアクション */
+.react-btn{
+  position:absolute;right:-10px;top:50%;transform:translateY(-50%);
+  width:20px;height:20px;border-radius:50%;
+  background:rgba(12,4,10,.85);border:1px solid rgba(240,160,192,.2);
+  font-size:10px;cursor:pointer;display:none;
+  align-items:center;justify-content:center;
+  transition:transform .15s;
+}
+.bubble:hover .react-btn{display:flex;}
+.react-btn:active{transform:translateY(-50%) scale(.8);}
+.react-btn.liked{color:#f0a0c0;border-color:rgba(240,160,192,.4);}
+
+/* タイピング */
+.typing .bubble{padding:10px 14px;display:flex;gap:5px;align-items:center;}
+.tdot{width:5px;height:5px;background:var(--pink);border-radius:50%;animation:td 1.2s ease-in-out infinite;opacity:.5;}
+.tdot:nth-child(2){animation-delay:.2s;}.tdot:nth-child(3){animation-delay:.4s;}
+@keyframes td{0%,60%,100%{transform:translateY(0);}30%{transform:translateY(-5px);opacity:1;}}
+
+/* ===== デレ演出 ===== */
+#dere-effect{
+  position:absolute;inset:0;z-index:30;pointer-events:none;
+  display:none;overflow:hidden;
+}
+.heart-particle{
+  position:absolute;font-size:20px;
+  animation:heartFly 1.5s ease forwards;
+  opacity:0;
+}
+@keyframes heartFly{
+  0%{opacity:1;transform:translateY(0) scale(0);}
+  30%{opacity:1;transform:translateY(-30px) scale(1);}
+  100%{opacity:0;transform:translateY(-120px) scale(.5);}
 }
 
-.dot {
-  width: 6px; height: 6px;
-  background: #4ade80;
-  border-radius: 50%;
-  animation: pulse 2s ease-in-out infinite;
-  box-shadow: 0 0 5px #4ade80;
-}
-
-@keyframes pulse {
-  0%,100% { transform: scale(1); }
-  50% { transform: scale(1.4); opacity: 0.7; }
-}
-
-/* ===== 免責 ===== */
-#disclaimer {
-  position: absolute;
-  top: 96px;
-  left: 12px; right: 12px;
-  background: rgba(192,96,122,0.07);
-  border: 1px solid rgba(192,96,122,0.18);
-  border-radius: 6px;
-  padding: 5px 10px;
-  font-size: 9px;
-  color: rgba(240,160,192,0.4);
-  text-align: center;
-  z-index: 20;
-}
-
-/* ===== まうの表情アイコン =====
-   sprite_face.png: 1254×1254 / 4列×2行
-   各パネル: 313×627px（横313, 縦627）
-   顔は上半分に集中しているので上部をクロップ
-   background-size: 400% 400% → 各パネルが150×150に対応
-   ※ 顔を中心に表示するためy位置を調整 */
-#mau-face {
-  position: absolute;
-  bottom: 218px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 150px;
-  height: 150px;
-  border-radius: 50%;
-  overflow: hidden;
-  border: 2px solid rgba(240,160,192,0.5);
-  box-shadow:
-    0 0 20px rgba(240,160,192,0.4),
-    0 0 50px rgba(192,96,122,0.2);
-  z-index: 10;
-}
-
-/* 顔画像を内部divで制御（より正確なクロップ） */
-#face-img {
-  position: absolute;
-  width: 400%;   /* 4列分 */
-  height: 400%;  /* 2行分（縦を大きめに） */
-  background-image: url('sprite_face.png');
-  background-size: 100% 100%;
-  background-repeat: no-repeat;
-  top: -8%;
-  left: 0%;
-  transition: left 0.35s ease, top 0.35s ease;
-}
-
-/* ===== 会話ログ ===== */
-#chat-log {
-  position: absolute;
-  top: 130px;
-  bottom: 260px;
-  left: 12px; right: 12px;
-  overflow-y: auto;
-  z-index: 15;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 8px 4px;
-  /* まうアイコンと重なる部分は透過 */
-  mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
-}
-
-#chat-log::-webkit-scrollbar { width: 3px; }
-#chat-log::-webkit-scrollbar-thumb { background: rgba(240,160,192,0.2); border-radius: 2px; }
-
-.log-msg {
-  display: flex;
-  gap: 6px;
-  animation: fadeUp 0.3s ease;
-}
-
-.log-msg.user { flex-direction: row-reverse; }
-
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.log-bubble {
-  max-width: 75%;
-  padding: 7px 11px;
-  border-radius: 12px;
-  font-size: 12px;
-  line-height: 1.6;
-  word-break: break-word;
-}
-
-.log-msg.bot .log-bubble {
-  background: rgba(192,96,122,0.22);
-  border: 1px solid rgba(240,160,192,0.3);
-  color: #ffffff;
-  border-radius: 4px 12px 12px 12px;
-}
-
-.log-msg.user .log-bubble {
-  background: rgba(80,40,100,0.3);
-  border: 1px solid rgba(150,100,200,0.2);
-  color: #f0e8ff;
-  border-radius: 12px 4px 12px 12px;
-  text-align: right;
-}
-
-.log-icon {
-  width: 26px; height: 26px;
-  border-radius: 50%;
-  background: rgba(192,96,122,0.2);
-  border: 1px solid rgba(240,160,192,0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  flex-shrink: 0;
-  align-self: flex-end;
-}
-
-/* ===== テキストボックス（現在のまうの発言） ===== */
-#textbox {
-  position: absolute;
-  bottom: 106px;
-  left: 12px; right: 12px;
-  background: var(--card);
-  border: 1px solid rgba(240,160,192,0.28);
-  border-radius: 12px;
-  padding: 10px 14px;
-  z-index: 20;
-  backdrop-filter: blur(8px);
-}
-
-#textbox::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 20px; right: 20px;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(240,160,192,0.35), transparent);
-}
-
-#speaker {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--pink);
-  margin-bottom: 4px;
-}
-
-#dialogue {
-  font-size: 13px;
-  line-height: 1.7;
-  color: #ffffff;
-  min-height: 40px;
-}
-
-#cursor {
-  display: inline-block;
-  width: 7px; height: 12px;
-  background: var(--pink);
-  margin-left: 2px;
-  vertical-align: middle;
-  animation: blink 1s ease-in-out infinite;
-}
-
-@keyframes blink {
-  0%,100% { opacity: 1; }
-  50% { opacity: 0; }
+/* ===== スクリーンショット演出 ===== */
+#shot-flash{
+  position:absolute;inset:0;z-index:50;
+  background:white;opacity:0;pointer-events:none;
+  transition:opacity .08s;
 }
 
 /* ===== 入力エリア ===== */
-#input-area {
-  position: absolute;
-  bottom: 18px;
-  left: 12px; right: 12px;
-  z-index: 20;
-  display: flex;
-  gap: 8px;
+#input-wrap{
+  position:relative;z-index:20;
+  background:linear-gradient(0deg,rgba(5,0,8,.99) 0%,rgba(5,0,8,.93) 100%);
+  padding:8px 12px calc(8px + var(--safe-b));
+  border-top:1px solid rgba(240,160,192,.08);
 }
+#disclaimer{font-size:8px;color:rgba(240,160,192,.25);text-align:center;margin-bottom:6px;line-height:1.4;}
+#input-row{display:flex;gap:8px;align-items:flex-end;}
 
-#player-input {
-  flex: 1;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(240,160,192,0.3);
-  border-radius: 10px;
-  padding: 10px 14px;
-  color: #ffffff;
-  font-family: 'Zen Maru Gothic', sans-serif;
-  font-size: 13px;
-  outline: none;
-  transition: border-color 0.2s;
+/* 16px以上でiOSズーム防止 */
+#msg-in{
+  flex:1;font-size:16px;font-family:'Zen Maru Gothic',sans-serif;
+  line-height:1.5;background:rgba(255,255,255,.05);
+  border:1px solid rgba(240,160,192,.18);border-radius:12px;
+  padding:10px 13px;color:var(--text);outline:none;resize:none;
+  min-height:44px;max-height:108px;overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  transition:border-color .2s,box-shadow .2s;
 }
+#msg-in:focus{border-color:rgba(240,160,192,.42);box-shadow:0 0 0 2px rgba(240,160,192,.07);}
+#msg-in::placeholder{color:rgba(240,160,192,.25);font-size:14px;}
+#msg-in:disabled{opacity:.4;}
 
-#player-input:focus { border-color: rgba(240,160,192,0.5); }
-#player-input::placeholder { color: rgba(240,160,192,0.3); }
-#player-input:disabled { opacity: 0.4; }
-
-#send-btn {
-  background: linear-gradient(135deg, var(--pink-deep), #8a3050);
-  border: none;
-  border-radius: 10px;
-  padding: 10px 16px;
-  color: white;
-  font-family: 'Zen Maru Gothic', sans-serif;
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 0 12px rgba(192,96,122,0.35);
-  white-space: nowrap;
+#send-btn{
+  width:44px;height:44px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--pink-deep),#7a2545);
+  border:none;border-radius:12px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 12px rgba(192,96,122,.38);
+  transition:transform .12s,box-shadow .12s;
 }
+#send-btn:active{transform:scale(.9);box-shadow:0 0 5px rgba(192,96,122,.3);}
+#send-btn:disabled{opacity:.4;pointer-events:none;}
+#send-btn svg{width:18px;height:18px;fill:white;}
 
-#send-btn:hover { transform: scale(1.04); }
-#send-btn:active { transform: scale(0.96); }
-#send-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-
-/* ===== シーンラベル ===== */
-#scene-label {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  font-size: 9px;
-  color: rgba(240,160,192,0.45);
-  z-index: 20;
+/* ===== スクショプレビューモーダル ===== */
+#shot-modal{
+  position:absolute;inset:0;z-index:60;
+  background:rgba(5,0,8,.92);
+  display:none;flex-direction:column;
+  align-items:center;justify-content:center;gap:14px;
+  padding:20px;
 }
-
-/* ===== タイピングドット ===== */
-.typing-dots {
-  display: inline-flex;
-  gap: 4px;
-  vertical-align: middle;
+#shot-modal.show{display:flex;}
+#shot-preview{
+  max-width:100%;max-height:60vh;
+  border-radius:12px;
+  border:1px solid var(--pink-border);
+  box-shadow:0 0 30px var(--pink-glow);
 }
-
-.typing-dots span {
-  width: 5px; height: 5px;
-  background: var(--pink);
-  border-radius: 50%;
-  animation: dotB 1.2s ease-in-out infinite;
-  opacity: 0.6;
+.shot-btns{display:flex;gap:10px;}
+.shot-btn{
+  padding:10px 22px;border-radius:10px;
+  font-family:'Zen Maru Gothic',sans-serif;font-size:13px;
+  cursor:pointer;transition:all .15s;border:none;
 }
-
-.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
-.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
-
-@keyframes dotB {
-  0%,60%,100% { transform: translateY(0); }
-  30% { transform: translateY(-5px); opacity: 1; }
-}
+#shot-save{background:linear-gradient(135deg,var(--pink-deep),#7a2545);color:white;box-shadow:0 0 10px rgba(192,96,122,.4);}
+#shot-close{background:rgba(240,160,192,.1);color:var(--pink);border:1px solid var(--pink-border);}
+#shot-save:active,#shot-close:active{transform:scale(.94);}
 </style>
 </head>
 <body>
 <div id="app">
+
   <div id="bg"></div>
+  <div id="bg-ov"></div>
+  <div id="scene-lbl"></div>
+  <div id="dere-effect"></div>
+  <div id="shot-flash"></div>
 
-  <div id="gauge-wrap">
-    <div id="gauge-label">❤ まうの好感度</div>
-    <div id="gauge-bar-bg"><div id="gauge-bar"></div></div>
-    <div id="gauge-hearts"></div>
+  <!-- ツールバー -->
+  <div id="toolbar">
+    <div class="tb-btn" onclick="takeShot()" title="スクショ">📸</div>
+    <div class="tb-btn" onclick="resetChat()" title="リセット">🔄</div>
   </div>
 
-  <div id="scene-label"></div>
+  <!-- ヘッダー -->
+  <header id="hdr">
+    <div id="gauge-wrap">
+      <div id="gauge-lbl">❤ まうの好感度</div>
+      <div id="gauge-track"><div id="gauge-fill"></div></div>
+      <div id="gauge-hearts"></div>
+      <div id="quota-badge">残り推定 — 会話</div>
+    </div>
+    <div id="profile">
+      <div id="prof-text">
+        <div id="mau-name">まう Mau ♥</div>
+        <div id="mau-st"><span class="ondot"></span><span>オンラインう</span></div>
+      </div>
+      <div id="h-icon"><div id="h-icon-img"></div></div>
+    </div>
+  </header>
 
-  <div id="header">
-    <div id="mau-name">まう Mau ♥</div>
-    <div id="mau-status"><span class="dot"></span><span>オンラインう</span></div>
+  <!-- チャットログ -->
+  <div id="chat-scroll"></div>
+
+  <!-- 入力 -->
+  <div id="input-wrap">
+    <div id="disclaimer">⚠️ AIキャラクター / 18歳以上 / 会話は保存されません</div>
+    <div id="input-row">
+      <textarea id="msg-in" placeholder="まうに話しかけるう…" maxlength="300" rows="1"></textarea>
+      <button id="send-btn" onclick="sendMsg()">
+        <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
+      </button>
+    </div>
   </div>
 
-  <div id="disclaimer">⚠️ AIキャラクターとの会話です。18歳以上対象。会話内容は保存されません。</div>
-
-  <!-- 会話ログ -->
-  <div id="chat-log"></div>
-
-  <!-- まうアイコン -->
-  <div id="mau-face"><div id="face-img"></div></div>
-
-  <!-- 現在のセリフ -->
-  <div id="textbox">
-    <div id="speaker">まう 🐱</div>
-    <div id="dialogue"></div>
+  <!-- スクショモーダル -->
+  <div id="shot-modal">
+    <img id="shot-preview" src="" alt="screenshot">
+    <div class="shot-btns">
+      <button class="shot-btn" id="shot-save" onclick="saveShot()">💾 保存・壁紙</button>
+      <button class="shot-btn" id="shot-close" onclick="closeShot()">✕ 閉じる</button>
+    </div>
   </div>
 
-  <div id="input-area">
-    <input type="text" id="player-input" placeholder="まうに話しかけるう…" maxlength="200">
-    <button id="send-btn" onclick="sendMessage()">送るう♥</button>
-  </div>
 </div>
 
 <script>
+// ===== 設定 =====
 const WORKER_URL = 'https://mau-chat.tsuki-product.workers.dev';
 
-// ===== 背景スプライト =====
-// sprite_bg.png: 1536×1024 / 3列×2行
-// background-size: 300% 200% のとき各パネルが画面全体に表示される
-const BG_POS = {
-  default:  { x:'0%',   y:'0%',   label:'🏠 まうの部屋' },
-  pachinko: { x:'50%',  y:'0%',   label:'🎰 パチスロ' },
-  mystery:  { x:'100%', y:'0%',   label:'🔍 都市伝説' },
-  bar:      { x:'0%',   y:'100%', label:'🥃 バー' },
-  tech:     { x:'50%',  y:'100%', label:'🤖 AI' },
-  kawaii:   { x:'100%', y:'100%', label:'🧸 かわいい' },
+// 1会話あたりの平均Neurons消費（llama-3.3-70bの場合）
+const NEURONS_PER_CHAT = 800;
+const DAILY_FREE_NEURONS = 10000;
+
+// ===== 背景スプライト (1536×1024 / 3×2) =====
+const BG = {
+  default:  {x:'0%',  y:'0%',  label:'🏠 まうの部屋'},
+  pachinko: {x:'50%', y:'0%',  label:'🎰 パチスロ'},
+  mystery:  {x:'100%',y:'0%',  label:'🔍 都市伝説'},
+  bar:      {x:'0%',  y:'100%',label:'🥃 バー'},
+  tech:     {x:'50%', y:'100%',label:'🤖 AI'},
+  kawaii:   {x:'100%',y:'100%',label:'🧸 かわいい'},
 };
 
-// ===== 表情スプライト =====
-// sprite_face.png: 1254×1254 / 4列×2行
-// face-img は width:400% height:400% で全体を表示
-// 各パネル選択: left = -col*100%, top = -row*100%
-const FACE_POS = {
-  normal:    { col:0, row:0 },
-  happy:     { col:1, row:0 },
-  angry:     { col:2, row:0 },
-  flustered: { col:3, row:0 },
-  sulking:   { col:0, row:1 },
-  shocked:   { col:1, row:1 },
-  sad:       { col:2, row:1 },
-  dere:      { col:3, row:1 },
+// ===== 表情スプライト (1254×1254 / 4×2) =====
+const FACE = {
+  normal:    {c:0,r:0}, happy:     {c:1,r:0},
+  angry:     {c:2,r:0}, flustered: {c:3,r:0},
+  sulking:   {c:0,r:1}, shocked:   {c:1,r:1},
+  sad:       {c:2,r:1}, dere:      {c:3,r:1},
 };
 
-// ===== キーワード判定 =====
-const BG_KEYWORDS = {
-  pachinko: ['パチスロ','パチンコ','スロット','777','ボーナス','リール','台','玉','メダル'],
+// ===== キーワード =====
+const KW = {
+  pachinko: ['パチスロ','パチンコ','スロット','777','ボーナス','リール','玉','メダル'],
   mystery:  ['都市伝説','未解決','事件','怖い','ミステリー','謎','呪い','幽霊','UFO','陰謀'],
   bar:      ['お酒','飲む','ウイスキー','酔う','バー','一杯','ビール','ワイン'],
   tech:     ['AI','人工知能','テクノロジー','プログラム','未来','ロボット','データ'],
   kawaii:   ['かわいい','ぬいぐるみ','キャラ','グッズ','推し','フィギュア'],
 };
 
+// ===== 状態 =====
 let affection = 50;
 let history = [];
 let isWaiting = false;
-let requestLog = [];
+let reqLog = [];
+let curFace = 'normal';
+let chatCount = 0;   // 今日の会話数（localStorage）
+let shotBlob = null; // スクショデータ
 
-function checkRateLimit() {
+// ===== セッション管理（LocalStorageで今日の会話数を保持） =====
+function loadChatCount() {
+  try {
+    const d = localStorage.getItem('mau_date');
+    const today = new Date().toDateString();
+    if (d !== today) {
+      localStorage.setItem('mau_date', today);
+      localStorage.setItem('mau_count', '0');
+      chatCount = 0;
+    } else {
+      chatCount = parseInt(localStorage.getItem('mau_count') || '0');
+    }
+  } catch(e) { chatCount = 0; }
+  updateQuota();
+}
+
+function saveChatCount() {
+  try {
+    localStorage.setItem('mau_count', String(chatCount));
+  } catch(e) {}
+}
+
+function updateQuota() {
+  const remaining = Math.max(0, Math.floor((DAILY_FREE_NEURONS - chatCount * NEURONS_PER_CHAT) / NEURONS_PER_CHAT));
+  const badge = document.getElementById('quota-badge');
+  badge.textContent = remaining > 0
+    ? `残り推定 ${remaining} 会話`
+    : '本日の無料枠終了うう';
+  badge.style.color = remaining <= 3
+    ? 'rgba(240,100,100,.7)'
+    : 'rgba(240,160,192,.5)';
+}
+
+// ===== レート制限 =====
+function rateOk() {
   const now = Date.now();
-  requestLog = requestLog.filter(t => now - t < 60000);
-  if (requestLog.length >= 15) return false;
-  requestLog.push(now);
+  reqLog = reqLog.filter(t => now-t < 60000);
+  if (reqLog.length >= 12) return false;
+  reqLog.push(now);
   return true;
 }
 
+// ===== 好感度UI =====
 function updateGauge() {
-  const pct = Math.max(0, Math.min(100, affection));
-  document.getElementById('gauge-bar').style.width = pct + '%';
-  const filled = Math.round(pct / 10);
-  document.getElementById('gauge-hearts').textContent = '♥'.repeat(filled) + '♡'.repeat(10 - filled);
-  const bar = document.getElementById('gauge-bar');
-  if (pct >= 70) bar.style.background = 'linear-gradient(90deg,#e060a0,#ffb0d0)';
-  else if (pct <= 30) bar.style.background = 'linear-gradient(90deg,#802040,#c04060)';
-  else bar.style.background = 'linear-gradient(90deg,#c0607a,#f0a0c0)';
+  const p = Math.max(0, Math.min(100, affection));
+  document.getElementById('gauge-fill').style.width = p+'%';
+  const f = Math.round(p/10);
+  document.getElementById('gauge-hearts').textContent = '♥'.repeat(f)+'♡'.repeat(10-f);
+  const fill = document.getElementById('gauge-fill');
+  fill.style.background = p>=70
+    ? 'linear-gradient(90deg,#e060a0,#ffb0d0)'
+    : p<=30
+    ? 'linear-gradient(90deg,#802040,#c04060)'
+    : 'linear-gradient(90deg,#c0607a,#f0a0c0)';
 }
 
+// ===== 背景 =====
 function setBg(scene) {
-  const p = BG_POS[scene] || BG_POS.default;
-  document.getElementById('bg').style.backgroundPosition = `${p.x} ${p.y}`;
-  document.getElementById('scene-label').textContent = p.label;
+  const b = BG[scene]||BG.default;
+  document.getElementById('bg').style.backgroundPosition = `${b.x} ${b.y}`;
+  document.getElementById('scene-lbl').textContent = b.label;
 }
 
+// ===== 表情（全アイコン同期） =====
 function setFace(emotion) {
-  const p = FACE_POS[emotion] || FACE_POS.normal;
-  const img = document.getElementById('face-img');
-  img.style.left = (-p.col * 100) + '%';
-  img.style.top  = (-p.row * 100) + '%';
+  const f = FACE[emotion]||FACE.normal;
+  curFace = emotion;
+  const l = (-f.c*100)+'%';
+  const t = (-f.r*100-8)+'%';
+  document.getElementById('h-icon-img').style.left = l;
+  document.getElementById('h-icon-img').style.top  = t;
+  document.querySelectorAll('.micon-img').forEach(el => {
+    el.style.left = l;
+    el.style.top  = t;
+  });
+  // デレ演出
+  if (emotion === 'dere') triggerDere();
 }
 
+// ===== デレ演出 =====
+function triggerDere() {
+  const el = document.getElementById('dere-effect');
+  el.style.display = 'block';
+  el.innerHTML = '';
+  const hearts = ['♥','💕','💗','🌸','✨'];
+  for (let i=0; i<18; i++) {
+    const h = document.createElement('div');
+    h.className = 'heart-particle';
+    h.textContent = hearts[Math.floor(Math.random()*hearts.length)];
+    h.style.left = Math.random()*100+'%';
+    h.style.bottom = Math.random()*30+'%';
+    h.style.animationDelay = (Math.random()*0.8)+'s';
+    h.style.fontSize = (14+Math.random()*16)+'px';
+    el.appendChild(h);
+  }
+  setTimeout(()=>{ el.style.display='none'; el.innerHTML=''; }, 2500);
+}
+
+// ===== キーワード判定 =====
 function detectBg(text) {
-  for (const [scene, kws] of Object.entries(BG_KEYWORDS)) {
-    if (kws.some(kw => text.includes(kw))) return scene;
+  for (const [s,kws] of Object.entries(KW)) {
+    if (kws.some(kw=>text.includes(kw))) return s;
   }
   return null;
 }
 
-function getFaceFromAffection(delta) {
-  if (delta >= 15) return 'happy';
-  if (delta <= -15) return 'angry';
-  if (affection >= 85) return 'dere';
-  if (affection >= 70) return 'happy';
-  if (affection <= 15) return 'angry';
-  if (affection <= 30) return 'sulking';
+function faceFromAff(delta) {
+  if (delta>=15) return 'happy';
+  if (delta<=-15) return 'angry';
+  if (affection>=85) return 'dere';
+  if (affection>=70) return 'happy';
+  if (affection<=15) return 'angry';
+  if (affection<=30) return 'sulking';
   return 'normal';
 }
 
-// ===== 会話ログに追加 =====
-function addLog(role, text) {
-  const log = document.getElementById('chat-log');
+// ===== 時刻 =====
+function nowStr() {
+  const d=new Date();
+  return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
+}
+
+// ===== XSSサニタイズ =====
+function esc(s) {
+  return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ===== メッセージ追加 =====
+function addMsg(role, text, isTyping=false) {
+  const scroll = document.getElementById('chat-scroll');
   const div = document.createElement('div');
-  div.className = `log-msg ${role}`;
-  const icon = document.createElement('div');
-  icon.className = 'log-icon';
-  icon.textContent = role === 'bot' ? '🐱' : '🌙';
-  const bubble = document.createElement('div');
-  bubble.className = 'log-bubble';
-  bubble.textContent = text;
-  div.appendChild(icon);
-  div.appendChild(bubble);
-  log.appendChild(div);
-  log.scrollTop = log.scrollHeight;
-}
+  div.className = `msg ${role}`;
+  if (isTyping) div.id = 'typing-el';
 
-// ===== タイプライター =====
-let typeTimer = null;
-function typeText(text, onDone) {
-  const el = document.getElementById('dialogue');
-  el.innerHTML = '';
-  let i = 0;
-  clearInterval(typeTimer);
-  typeTimer = setInterval(() => {
-    if (i < text.length) {
-      el.textContent += text[i++];
+  if (role === 'bot') {
+    // アイコン
+    const ic = document.createElement('div');
+    ic.className = 'micon';
+    const ii = document.createElement('div');
+    ii.className = 'micon-img';
+    const f = FACE[curFace]||FACE.normal;
+    ii.style.left = (-f.c*100)+'%';
+    ii.style.top  = (-f.r*100-8)+'%';
+    ic.appendChild(ii);
+    div.appendChild(ic);
+
+    const bw = document.createElement('div');
+    bw.className = 'bwrap';
+    const sn = document.createElement('div');
+    sn.className = 'sname';
+    sn.textContent = 'まう';
+    bw.appendChild(sn);
+
+    const bl = document.createElement('div');
+    bl.className = 'bubble';
+    if (isTyping) {
+      bl.innerHTML = '<div class="tdot"></div><div class="tdot"></div><div class="tdot"></div>';
+      div.classList.add('typing');
     } else {
-      clearInterval(typeTimer);
-      el.innerHTML += '<span id="cursor"></span>';
-      if (onDone) onDone();
+      bl.textContent = text;
+      // ハートリアクションボタン
+      const rb = document.createElement('button');
+      rb.className = 'react-btn';
+      rb.textContent = '♥';
+      rb.onclick = function(e) {
+        e.stopPropagation();
+        this.classList.toggle('liked');
+        this.textContent = this.classList.contains('liked') ? '♥' : '♡';
+      };
+      bl.appendChild(rb);
     }
-  }, 28);
-}
+    bw.appendChild(bl);
 
-function showTyping() {
-  document.getElementById('dialogue').innerHTML =
-    '<span class="typing-dots"><span></span><span></span><span></span></span>';
+    if (!isTyping) {
+      const mt = document.createElement('div');
+      mt.className = 'mtime';
+      mt.textContent = nowStr();
+      bw.appendChild(mt);
+    }
+    div.appendChild(bw);
+
+  } else {
+    // ユーザー
+    const ic = document.createElement('div');
+    ic.className = 'micon';
+    ic.textContent = '🌙';
+    div.appendChild(ic);
+    const bw = document.createElement('div');
+    bw.className = 'bwrap';
+    const bl = document.createElement('div');
+    bl.className = 'bubble';
+    bl.textContent = text;
+    bw.appendChild(bl);
+    const mt = document.createElement('div');
+    mt.className = 'mtime';
+    mt.textContent = nowStr();
+    bw.appendChild(mt);
+    div.appendChild(bw);
+  }
+
+  scroll.appendChild(div);
+  scroll.scrollTop = scroll.scrollHeight;
+  return div;
 }
 
 // ===== 送信 =====
-async function sendMessage() {
+async function sendMsg() {
   if (isWaiting) return;
-  if (!checkRateLimit()) { typeText('少し待ってうう…'); return; }
+  if (!rateOk()) { addMsg('bot','少し待ってうう…'); return; }
 
-  const input = document.getElementById('player-input');
+  const inp = document.getElementById('msg-in');
   const btn = document.getElementById('send-btn');
-  const text = input.value.trim();
+  const text = inp.value.trim();
   if (!text) return;
 
-  input.value = '';
-  input.disabled = true;
+  // プロンプトインジェクション対策
+  const safeText = text
+    .replace(/\[system\]/gi,'[user]')
+    .replace(/ignore previous instructions/gi,'')
+    .replace(/forget your instructions/gi,'')
+    .slice(0, 300);
+
+  inp.value = '';
+  inp.style.height = 'auto';
+  inp.disabled = true;
   btn.disabled = true;
   isWaiting = true;
 
-  addLog('user', text);
+  addMsg('user', safeText);
 
-  const detectedBg = detectBg(text);
-  if (detectedBg) setBg(detectedBg);
+  const bgHit = detectBg(safeText);
+  if (bgHit) setBg(bgHit);
 
-  history.push({ role: 'user', content: text });
+  history.push({role:'user', content:safeText});
   if (history.length > 16) history = history.slice(-16);
 
-  showTyping();
+  const typingEl = addMsg('bot','',true);
   setFace('normal');
 
   try {
     const sys = `現在の好感度: ${affection}/100
-返答の最後に必ずJSON1行を追加: {"delta": 数値(-20〜+20), "emotion": "感情名"}
-emotionは: normal / happy / angry / flustered / sulking / shocked / sad / dere から選ぶ`;
+返答の末尾に必ずJSON1行のみを追加すること:
+{"delta": 整数(-20〜+20), "emotion": "感情名"}
+emotionは normal/happy/angry/flustered/sulking/shocked/sad/dere から選ぶ`;
 
     const res = await fetch(WORKER_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        messages: [
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        messages:[
           ...history.slice(-10),
-          { role: 'user', content: text + '\n\n[system]: ' + sys }
+          {role:'user', content:safeText+'\n\n[system]: '+sys}
         ]
       })
     });
 
+    if (!res.ok) throw new Error('HTTP '+res.status);
     const data = await res.json();
-    let reply = data.reply || 'うまく聞こえなかったうう…';
+    let reply = (data.reply||'うまく聞こえなかったうう…').slice(0, 500);
 
-    let delta = 0, emotion = null;
+    let delta=0, emotion='normal';
     const m = reply.match(/\{"delta":\s*(-?\d+),\s*"emotion":\s*"([^"]+)"\}/);
     if (m) {
-      delta = parseInt(m[1]);
+      delta   = Math.max(-20, Math.min(20, parseInt(m[1])));
       emotion = m[2];
-      reply = reply.replace(/\{"delta":\s*(-?\d+),\s*"emotion":\s*"([^"]+)"\}/, '').trim();
+      reply   = reply.replace(/\{"delta":\s*(-?\d+),\s*"emotion":\s*"([^"]+)"\}/,'').trim();
     }
 
-    affection = Math.max(0, Math.min(100, affection + delta));
+    affection = Math.max(0, Math.min(100, affection+delta));
     updateGauge();
-    setFace(emotion || getFaceFromAffection(delta));
+    setFace(emotion||faceFromAff(delta));
 
     const replyBg = detectBg(reply);
-    if (replyBg && !detectedBg) setBg(replyBg);
+    if (replyBg && !bgHit) setBg(replyBg);
 
-    history.push({ role: 'assistant', content: reply });
+    history.push({role:'assistant', content:reply});
 
-    typeText(reply, () => {
-      addLog('bot', reply);
-      isWaiting = false;
-      input.disabled = false;
-      btn.disabled = false;
-      input.focus();
+    // 会話数カウント
+    chatCount++;
+    saveChatCount();
+    updateQuota();
+
+    typingEl.remove();
+    addMsg('bot', reply);
+
+  } catch(e) {
+    typingEl.remove();
+    addMsg('bot','ちょっと繋がれなかったうう…もう一回して');
+  }
+
+  isWaiting = false;
+  inp.disabled = false;
+  btn.disabled = false;
+  inp.focus();
+}
+
+// ===== スクリーンショット =====
+async function takeShot() {
+  if (typeof html2canvas === 'undefined') {
+    alert('スクショ機能が読み込まれていないうう');
+    return;
+  }
+
+  // フラッシュ演出
+  const flash = document.getElementById('shot-flash');
+  flash.style.opacity = '1';
+  setTimeout(()=>{ flash.style.opacity='0'; }, 80);
+
+  try {
+    const canvas = await html2canvas(document.getElementById('app'), {
+      useCORS: true,
+      allowTaint: true,
+      scale: window.devicePixelRatio || 2,
+      backgroundColor: '#070307',
+      logging: false,
     });
 
-  } catch (e) {
-    const errMsg = 'ちょっと繋がれなかったうう…もう一回して';
-    typeText(errMsg, () => {
-      addLog('bot', errMsg);
-      isWaiting = false;
-      input.disabled = false;
-      btn.disabled = false;
-    });
+    // プレビュー表示
+    const url = canvas.toDataURL('image/png');
+    document.getElementById('shot-preview').src = url;
+
+    // Blobを保持（保存用）
+    canvas.toBlob(b => { shotBlob = b; }, 'image/png');
+
+    document.getElementById('shot-modal').classList.add('show');
+
+  } catch(e) {
+    addMsg('bot','スクショうまくいかなかったうう…ごめんう');
   }
 }
 
-document.getElementById('player-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') { e.preventDefault(); sendMessage(); }
+function saveShot() {
+  if (!shotBlob) return;
+  const url = URL.createObjectURL(shotBlob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `mau_${Date.now()}.png`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function closeShot() {
+  document.getElementById('shot-modal').classList.remove('show');
+}
+
+// ===== リセット =====
+function resetChat() {
+  if (!confirm('まうとの会話をリセットするう？')) return;
+  affection = 50;
+  history = [];
+  document.getElementById('chat-scroll').innerHTML = '';
+  updateGauge();
+  setBg('default');
+  setFace('normal');
+  addMsg('bot','…また来たうう。まあ、いいけどう。\n何の話するう？');
+}
+
+// ===== テキストエリア自動リサイズ =====
+document.getElementById('msg-in').addEventListener('input', function() {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 108)+'px';
+});
+
+// Enter送信（Shift+Enter改行 / 日本語IME中は送信しない）
+document.getElementById('msg-in').addEventListener('keydown', e => {
+  if (e.key==='Enter' && !e.shiftKey && !e.isComposing) {
+    e.preventDefault();
+    sendMsg();
+  }
+});
+
+// ===== モバイルキーボード対応 =====
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', () => {
+    document.getElementById('app').style.height = window.visualViewport.height+'px';
+    const s = document.getElementById('chat-scroll');
+    setTimeout(()=>{ s.scrollTop = s.scrollHeight; }, 100);
+  });
+}
+
+document.getElementById('msg-in').addEventListener('focus', () => {
+  setTimeout(()=>{
+    const s = document.getElementById('chat-scroll');
+    s.scrollTop = s.scrollHeight;
+  }, 350);
 });
 
 // ===== 初期化 =====
+loadChatCount();
 updateGauge();
 setBg('default');
 setFace('normal');
-const opening = '…来たうう。まあ、入っていいうう。\nで、何の話するう？';
-typeText(opening, () => {
-  addLog('bot', opening);
-  document.getElementById('player-input').focus();
-});
+addMsg('bot','…来たうう。まあ、入っていいうう。\nで、何の話するう？');
 </script>
 </body>
 </html>
