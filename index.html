@@ -5,568 +5,582 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>まうと話すう♥</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700&family=Playfair+Display:ital@1&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700&family=Playfair+Display:ital@1&display=swap');
 
-  :root {
-    --pink: #f0a0c0;
-    --pink-deep: #c0607a;
-    --pink-light: #fde8f0;
-    --black: #1a0a10;
-    --dark: #2a0f1e;
-    --card: rgba(30,10,20,0.85);
-    --glow: 0 0 20px rgba(240,160,192,0.4);
-  }
+:root {
+  --pink: #f0a0c0;
+  --pink-deep: #c0607a;
+  --black: #1a0a10;
+  --card: rgba(15,5,12,0.82);
+}
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
-  body {
-    background: var(--black);
-    font-family: 'Zen Maru Gothic', sans-serif;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    overflow-x: hidden;
-    position: relative;
-  }
+body {
+  font-family: 'Zen Maru Gothic', sans-serif;
+  background: var(--black);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
 
-  /* 背景パーティクル */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background:
-      radial-gradient(ellipse at 20% 50%, rgba(192,96,122,0.15) 0%, transparent 60%),
-      radial-gradient(ellipse at 80% 20%, rgba(240,160,192,0.1) 0%, transparent 50%),
-      radial-gradient(ellipse at 60% 80%, rgba(192,96,122,0.08) 0%, transparent 40%);
-    pointer-events: none;
-    z-index: 0;
-  }
+/* ===== メインコンテナ ===== */
+#app {
+  position: relative;
+  width: 100vw;
+  max-width: 480px;
+  height: 100vh;
+  max-height: 900px;
+  overflow: hidden;
+}
 
-  .stars {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 0;
-    overflow: hidden;
-  }
+/* ===== 背景スプライト ===== */
+#bg {
+  position: absolute;
+  inset: 0;
+  background-image: url('sprite_bg.png');
+  background-size: 300% 200%;
+  background-position: 0% 0%;
+  transition: background-position 0.8s cubic-bezier(0.4,0,0.2,1);
+}
 
-  .star {
-    position: absolute;
-    width: 2px;
-    height: 2px;
-    background: var(--pink);
-    border-radius: 50%;
-    animation: twinkle var(--d, 3s) ease-in-out infinite;
-    animation-delay: var(--delay, 0s);
-    opacity: 0;
-  }
+/* 背景オーバーレイ */
+#bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(10,0,15,0.25) 0%,
+    rgba(10,0,15,0.1) 40%,
+    rgba(10,0,15,0.5) 70%,
+    rgba(10,0,15,0.92) 100%
+  );
+}
 
-  @keyframes twinkle {
-    0%, 100% { opacity: 0; transform: scale(0.5); }
-    50% { opacity: 0.8; transform: scale(1.2); }
-  }
+/* ===== まうの表情（スプライト） ===== */
+#mau-face {
+  position: absolute;
+  bottom: 200px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background-image: url('sprite_face.png');
+  background-size: 400% 200%;
+  background-position: 0% 0%;
+  border: 2px solid rgba(240,160,192,0.5);
+  box-shadow: 0 0 24px rgba(240,160,192,0.4), 0 0 60px rgba(192,96,122,0.2);
+  transition: background-position 0.35s ease;
+  z-index: 10;
+  overflow: hidden;
+}
 
-  /* ヘッダー */
-  .header {
-    position: relative;
-    z-index: 10;
-    width: 100%;
-    max-width: 480px;
-    padding: 24px 20px 0;
-    text-align: center;
-  }
+/* ===== 好感度ゲージ ===== */
+#gauge-wrap {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  z-index: 20;
+}
 
-  .header-card {
-    background: var(--card);
-    border: 1px solid rgba(240,160,192,0.3);
-    border-radius: 20px 20px 0 0;
-    padding: 20px;
-    backdrop-filter: blur(10px);
-    box-shadow: var(--glow);
-    position: relative;
-    overflow: hidden;
-  }
+#gauge-label {
+  font-size: 10px;
+  color: rgba(240,160,192,0.7);
+  margin-bottom: 4px;
+  letter-spacing: 0.08em;
+}
 
-  .header-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--pink), transparent);
-  }
+#gauge-bar-bg {
+  height: 6px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid rgba(240,160,192,0.15);
+}
 
-  .avatar-wrap {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-  }
+#gauge-bar {
+  height: 100%;
+  width: 50%;
+  background: linear-gradient(90deg, #c0607a, #f0a0c0);
+  border-radius: 3px;
+  transition: width 0.6s cubic-bezier(0.34,1.56,0.64,1);
+  box-shadow: 0 0 8px rgba(240,160,192,0.5);
+}
 
-  .avatar {
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    border: 2px solid var(--pink);
-    box-shadow: 0 0 16px rgba(240,160,192,0.5);
-    object-fit: cover;
-    background: linear-gradient(135deg, var(--pink-deep), var(--dark));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 28px;
-    flex-shrink: 0;
-  }
+#gauge-hearts {
+  margin-top: 4px;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--pink);
+}
 
-  .name-wrap { text-align: left; }
+/* ===== ヘッダー（名前） ===== */
+#header {
+  position: absolute;
+  top: 60px;
+  left: 0; right: 0;
+  text-align: center;
+  z-index: 20;
+}
 
-  .name {
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--pink);
-    text-shadow: 0 0 10px rgba(240,160,192,0.6);
-    letter-spacing: 0.05em;
-  }
+#mau-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--pink);
+  text-shadow: 0 0 12px rgba(240,160,192,0.7);
+  letter-spacing: 0.1em;
+}
 
-  .status {
-    font-size: 11px;
-    color: rgba(240,160,192,0.6);
-    margin-top: 2px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
+#mau-status {
+  font-size: 11px;
+  color: rgba(240,160,192,0.6);
+  margin-top: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
 
-  .status-dot {
-    width: 6px;
-    height: 6px;
-    background: #4ade80;
-    border-radius: 50%;
-    animation: pulse 2s ease-in-out infinite;
-    box-shadow: 0 0 6px #4ade80;
-  }
+.status-dot {
+  width: 6px;
+  height: 6px;
+  background: #4ade80;
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+  box-shadow: 0 0 6px #4ade80;
+}
 
-  @keyframes pulse {
-    0%, 100% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.4); opacity: 0.7; }
-  }
+@keyframes pulse {
+  0%,100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.7; }
+}
 
-  .tagline {
-    font-size: 11px;
-    color: rgba(240,160,192,0.5);
-    margin-top: 10px;
-    font-style: italic;
-    font-family: 'Playfair Display', serif;
-  }
+/* ===== テキストボックス ===== */
+#textbox {
+  position: absolute;
+  bottom: 110px;
+  left: 12px;
+  right: 12px;
+  background: var(--card);
+  border: 1px solid rgba(240,160,192,0.3);
+  border-radius: 12px;
+  padding: 12px 16px;
+  z-index: 20;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
 
-  /* 注意書き */
-  .disclaimer {
-    background: rgba(192,96,122,0.1);
-    border: 1px solid rgba(192,96,122,0.3);
-    border-radius: 8px;
-    padding: 8px 12px;
-    font-size: 10px;
-    color: rgba(240,160,192,0.5);
-    margin-top: 12px;
-    line-height: 1.6;
-    text-align: left;
-  }
+#textbox::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 20px; right: 20px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(240,160,192,0.4), transparent);
+}
 
-  /* チャットエリア */
-  .chat-wrap {
-    position: relative;
-    z-index: 10;
-    width: 100%;
-    max-width: 480px;
-    padding: 0 20px;
-    flex: 1;
-  }
+#speaker {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--pink);
+  margin-bottom: 5px;
+  text-shadow: 0 0 8px rgba(240,160,192,0.5);
+}
 
-  .chat-box {
-    background: rgba(20,5,15,0.9);
-    border-left: 1px solid rgba(240,160,192,0.2);
-    border-right: 1px solid rgba(240,160,192,0.2);
-    height: calc(100vh - 320px);
-    min-height: 300px;
-    overflow-y: auto;
-    padding: 20px 16px;
-    scroll-behavior: smooth;
-  }
+#dialogue {
+  font-size: 13px;
+  line-height: 1.8;
+  color: #fde8f0;
+  min-height: 44px;
+}
 
-  .chat-box::-webkit-scrollbar { width: 4px; }
-  .chat-box::-webkit-scrollbar-track { background: transparent; }
-  .chat-box::-webkit-scrollbar-thumb { background: rgba(240,160,192,0.3); border-radius: 2px; }
+#cursor {
+  display: inline-block;
+  width: 7px;
+  height: 13px;
+  background: var(--pink);
+  margin-left: 2px;
+  vertical-align: middle;
+  animation: blink 1s ease-in-out infinite;
+}
 
-  /* メッセージ */
-  .msg {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 16px;
-    animation: fadeUp 0.3s ease;
-  }
+@keyframes blink {
+  0%,100% { opacity: 1; }
+  50% { opacity: 0; }
+}
 
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
+/* ===== 入力エリア ===== */
+#input-area {
+  position: absolute;
+  bottom: 20px;
+  left: 12px;
+  right: 12px;
+  z-index: 20;
+  display: flex;
+  gap: 8px;
+}
 
-  .msg.user { flex-direction: row-reverse; }
+#player-input {
+  flex: 1;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(240,160,192,0.2);
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: #fde8f0;
+  font-family: 'Zen Maru Gothic', sans-serif;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+}
 
-  .msg-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--pink-deep), var(--dark));
-    border: 1px solid rgba(240,160,192,0.4);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    flex-shrink: 0;
-  }
+#player-input:focus { border-color: rgba(240,160,192,0.5); }
+#player-input::placeholder { color: rgba(240,160,192,0.3); }
+#player-input:disabled { opacity: 0.4; }
 
-  .msg.user .msg-icon {
-    background: linear-gradient(135deg, #2a1a3a, #1a0a20);
-    border-color: rgba(150,100,200,0.3);
-  }
+#send-btn {
+  background: linear-gradient(135deg, var(--pink-deep), #8a3050);
+  border: none;
+  border-radius: 10px;
+  padding: 10px 16px;
+  color: white;
+  font-family: 'Zen Maru Gothic', sans-serif;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+  box-shadow: 0 0 12px rgba(192,96,122,0.4);
+}
 
-  .bubble {
-    max-width: 78%;
-    padding: 10px 14px;
-    border-radius: 16px;
-    font-size: 13px;
-    line-height: 1.7;
-    word-break: break-word;
-  }
+#send-btn:hover { transform: scale(1.04); }
+#send-btn:active { transform: scale(0.96); }
+#send-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
-  .msg.bot .bubble {
-    background: rgba(192,96,122,0.15);
-    border: 1px solid rgba(240,160,192,0.25);
-    color: #fde8f0;
-    border-radius: 4px 16px 16px 16px;
-  }
+/* ===== タイピングドット ===== */
+.typing-dots {
+  display: inline-flex;
+  gap: 4px;
+  vertical-align: middle;
+  margin-left: 4px;
+}
 
-  .msg.user .bubble {
-    background: rgba(100,60,140,0.2);
-    border: 1px solid rgba(150,100,200,0.25);
-    color: #e8ddf5;
-    border-radius: 16px 4px 16px 16px;
-    text-align: right;
-  }
+.typing-dots span {
+  width: 5px; height: 5px;
+  background: var(--pink);
+  border-radius: 50%;
+  animation: dotBounce 1.2s ease-in-out infinite;
+  opacity: 0.6;
+}
 
-  /* タイピング */
-  .typing .bubble {
-    display: flex;
-    gap: 5px;
-    align-items: center;
-    padding: 14px;
-  }
+.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
 
-  .dot {
-    width: 6px;
-    height: 6px;
-    background: var(--pink);
-    border-radius: 50%;
-    animation: bounce 1.2s ease-in-out infinite;
-  }
+@keyframes dotBounce {
+  0%,60%,100% { transform: translateY(0); }
+  30% { transform: translateY(-5px); opacity: 1; }
+}
 
-  .dot:nth-child(2) { animation-delay: 0.2s; }
-  .dot:nth-child(3) { animation-delay: 0.4s; }
+/* ===== 免責 ===== */
+#disclaimer {
+  position: absolute;
+  top: 100px;
+  left: 16px; right: 16px;
+  background: rgba(192,96,122,0.08);
+  border: 1px solid rgba(192,96,122,0.2);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 9px;
+  color: rgba(240,160,192,0.45);
+  text-align: center;
+  z-index: 20;
+  line-height: 1.5;
+}
 
-  @keyframes bounce {
-    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-    30% { transform: translateY(-6px); opacity: 1; }
-  }
-
-  /* 入力エリア */
-  .input-wrap {
-    position: relative;
-    z-index: 10;
-    width: 100%;
-    max-width: 480px;
-    padding: 0 20px 24px;
-  }
-
-  .input-card {
-    background: var(--card);
-    border: 1px solid rgba(240,160,192,0.3);
-    border-radius: 0 0 20px 20px;
-    padding: 14px;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-  }
-
-  .input-row {
-    display: flex;
-    gap: 10px;
-    align-items: flex-end;
-  }
-
-  textarea {
-    flex: 1;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(240,160,192,0.2);
-    border-radius: 12px;
-    padding: 10px 14px;
-    color: #fde8f0;
-    font-family: 'Zen Maru Gothic', sans-serif;
-    font-size: 13px;
-    resize: none;
-    min-height: 44px;
-    max-height: 120px;
-    outline: none;
-    transition: border-color 0.2s;
-    line-height: 1.6;
-  }
-
-  textarea:focus { border-color: rgba(240,160,192,0.5); }
-  textarea::placeholder { color: rgba(240,160,192,0.3); }
-
-  .send-btn {
-    width: 44px;
-    height: 44px;
-    background: linear-gradient(135deg, var(--pink-deep), #8a3050);
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-    flex-shrink: 0;
-    box-shadow: 0 0 12px rgba(192,96,122,0.4);
-  }
-
-  .send-btn:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(192,96,122,0.6); }
-  .send-btn:active { transform: scale(0.95); }
-  .send-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-
-  .send-btn svg { width: 20px; height: 20px; fill: white; }
-
-  /* レート制限警告 */
-  .rate-warn {
-    font-size: 10px;
-    color: rgba(240,160,192,0.4);
-    text-align: center;
-    margin-top: 8px;
-  }
-
-  /* エラー */
-  .error-msg {
-    color: #f87171;
-    font-size: 12px;
-    text-align: center;
-    padding: 8px;
-  }
-
-  /* スクロールヒント */
-  .scroll-hint {
-    font-size: 10px;
-    color: rgba(240,160,192,0.3);
-    text-align: center;
-    padding: 6px;
-  }
+/* ===== 背景シーンラベル ===== */
+#scene-label {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  font-size: 9px;
+  color: rgba(240,160,192,0.4);
+  z-index: 20;
+  letter-spacing: 0.05em;
+}
 </style>
 </head>
 <body>
+<div id="app">
 
-<!-- 星 -->
-<div class="stars" id="stars"></div>
+  <!-- 背景スプライト -->
+  <div id="bg"></div>
 
-<!-- ヘッダー -->
-<div class="header">
-  <div class="header-card">
-    <div class="avatar-wrap">
-      <div class="avatar">🐱</div>
-      <div class="name-wrap">
-        <div class="name">まう Mau ♥</div>
-        <div class="status">
-          <span class="status-dot"></span>
-          <span>オンラインう</span>
-        </div>
-      </div>
-    </div>
-    <div class="tagline">"まおは、君だけの推しう♥"</div>
-    <div class="disclaimer">
-      ⚠️ このチャットはAIキャラクターとの会話です。18歳以上を対象としています。
-      会話内容はサーバーに保存されません。緊急時は公的機関にご相談ください。
+  <!-- 好感度ゲージ -->
+  <div id="gauge-wrap">
+    <div id="gauge-label">❤ まうの好感度</div>
+    <div id="gauge-bar-bg"><div id="gauge-bar"></div></div>
+    <div id="gauge-hearts"></div>
+  </div>
+
+  <!-- ヘッダー -->
+  <div id="header">
+    <div id="mau-name">まう Mau ♥</div>
+    <div id="mau-status">
+      <span class="status-dot"></span>
+      <span>オンラインう</span>
     </div>
   </div>
-</div>
 
-<!-- チャットエリア -->
-<div class="chat-wrap">
-  <div class="chat-box" id="chatBox">
-    <div class="msg bot">
-      <div class="msg-icon">🐱</div>
-      <div class="bubble">
-        やっと来たう…遅いう。<br>
-        まあ、来てくれたから許してあげるけどう♥<br>
-        何か話しかけてみてう。
-      </div>
-    </div>
-  </div>
-  <div class="scroll-hint">↑ スクロールして過去の会話を見るう</div>
-</div>
+  <!-- 免責 -->
+  <div id="disclaimer">⚠️ AIキャラクターとの会話です。18歳以上対象。会話内容は保存されません。</div>
 
-<!-- 入力エリア -->
-<div class="input-wrap">
-  <div class="input-card">
-    <div class="input-row">
-      <textarea
-        id="userInput"
-        placeholder="まうに話しかけるう…"
-        rows="1"
-        maxlength="500"
-      ></textarea>
-      <button class="send-btn" id="sendBtn" onclick="sendMessage()">
-        <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
-      </button>
-    </div>
-    <div class="rate-warn" id="rateWarn"></div>
+  <!-- まうの表情 -->
+  <div id="mau-face"></div>
+
+  <!-- テキストボックス -->
+  <div id="textbox">
+    <div id="speaker">まう 🐱</div>
+    <div id="dialogue"></div>
   </div>
+
+  <!-- 入力エリア -->
+  <div id="input-area">
+    <input type="text" id="player-input" placeholder="まうに話しかけるう…" maxlength="200">
+    <button id="send-btn" onclick="sendMessage()">送るう♥</button>
+  </div>
+
+  <!-- シーンラベル -->
+  <div id="scene-label" id="scene-label"></div>
+
 </div>
 
 <script>
 // ===== 設定 =====
-// ★ デプロイ時にCloudflare WorkerのURLに変更してください
 const WORKER_URL = 'https://mau-chat.tsuki-product.workers.dev';
 
-// ===== レート制限（クライアント側） =====
-const RATE_LIMIT = { max: 10, window: 60 * 1000 }; // 1分間に10回まで
+// ===== 背景スプライト位置マップ =====
+// sprite_bg.png: 3列×2行
+// [default][pachinko][mystery]
+// [bar][tech][kawaii]
+const BG_POSITIONS = {
+  default:  { x: '0%',   y: '0%',   label: '🏠 まうの部屋' },
+  pachinko: { x: '50%',  y: '0%',   label: '🎰 パチスロ' },
+  mystery:  { x: '100%', y: '0%',   label: '🔍 都市伝説' },
+  bar:      { x: '0%',   y: '100%', label: '🥃 バー' },
+  tech:     { x: '50%',  y: '100%', label: '🤖 AI' },
+  kawaii:   { x: '100%', y: '100%', label: '🧸 かわいい' },
+};
+
+// ===== 表情スプライト位置マップ =====
+// sprite_face.png: 4列×2行
+// [normal][happy][angry][flustered]
+// [sulking][shocked][sad][dere]
+const FACE_POSITIONS = {
+  normal:    { x: '0%',    y: '0%'   },
+  happy:     { x: '33.3%', y: '0%'   },
+  angry:     { x: '66.6%', y: '0%'   },
+  flustered: { x: '100%',  y: '0%'   },
+  sulking:   { x: '0%',    y: '100%' },
+  shocked:   { x: '33.3%', y: '100%' },
+  sad:       { x: '66.6%', y: '100%' },
+  dere:      { x: '100%',  y: '100%' },
+};
+
+// ===== キーワード→背景マッピング =====
+const BG_KEYWORDS = {
+  pachinko: ['パチスロ','パチンコ','スロット','777','ボーナス','リール','台','玉','メダル'],
+  mystery:  ['都市伝説','未解決','事件','怖い','ミステリー','謎','呪い','幽霊','UFO','陰謀'],
+  bar:      ['お酒','飲む','ウイスキー','酔う','バー','一杯','ビール','ワイン','飲み'],
+  tech:     ['AI','人工知能','テクノロジー','プログラム','未来','ロボット','データ','コード'],
+  kawaii:   ['かわいい','ぬいぐるみ','キャラ','グッズ','推し','フィギュア','コレクション'],
+};
+
+// ===== ゲーム状態 =====
+let affection = 50;
+let history = [];
+let isWaiting = false;
 let requestLog = [];
 
+// ===== レート制限 =====
 function checkRateLimit() {
   const now = Date.now();
-  requestLog = requestLog.filter(t => now - t < RATE_LIMIT.window);
-  if (requestLog.length >= RATE_LIMIT.max) {
-    const wait = Math.ceil((RATE_LIMIT.window - (now - requestLog[0])) / 1000);
-    return { ok: false, wait };
-  }
+  requestLog = requestLog.filter(t => now - t < 60000);
+  if (requestLog.length >= 15) return false;
   requestLog.push(now);
-  return { ok: true };
+  return true;
 }
 
-// ===== 会話履歴（セッション内のみ、保存しない） =====
-let history = [];
-
-// ===== 入力サニタイズ =====
-function sanitize(str) {
-  return str.replace(/[<>'"&]/g, c => ({'<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;','&':'&amp;'}[c]));
+// ===== 好感度UI更新 =====
+function updateGauge() {
+  const pct = Math.max(0, Math.min(100, affection));
+  document.getElementById('gauge-bar').style.width = pct + '%';
+  const filled = Math.round(pct / 10);
+  document.getElementById('gauge-hearts').textContent =
+    '♥'.repeat(filled) + '♡'.repeat(10 - filled);
+  const bar = document.getElementById('gauge-bar');
+  if (pct >= 70) bar.style.background = 'linear-gradient(90deg,#e060a0,#ffb0d0)';
+  else if (pct <= 30) bar.style.background = 'linear-gradient(90deg,#802040,#c04060)';
+  else bar.style.background = 'linear-gradient(90deg,#c0607a,#f0a0c0)';
 }
 
-// ===== メッセージ追加 =====
-function addMsg(role, text) {
-  const box = document.getElementById('chatBox');
-  const div = document.createElement('div');
-  div.className = `msg ${role}`;
-  const icon = document.createElement('div');
-  icon.className = 'msg-icon';
-  icon.textContent = role === 'bot' ? '🐱' : '🌙';
-  const bubble = document.createElement('div');
-  bubble.className = 'bubble';
-  bubble.innerHTML = sanitize(text).replace(/\n/g, '<br>');
-  div.appendChild(icon);
-  div.appendChild(bubble);
-  box.appendChild(div);
-  box.scrollTop = box.scrollHeight;
+// ===== 背景切り替え =====
+function setBg(scene) {
+  const pos = BG_POSITIONS[scene] || BG_POSITIONS.default;
+  const bg = document.getElementById('bg');
+  bg.style.backgroundPosition = `${pos.x} ${pos.y}`;
+  document.getElementById('scene-label').textContent = pos.label;
 }
 
-function addTyping() {
-  const box = document.getElementById('chatBox');
-  const div = document.createElement('div');
-  div.className = 'msg bot typing';
-  div.id = 'typing';
-  div.innerHTML = '<div class="msg-icon">🐱</div><div class="bubble"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>';
-  box.appendChild(div);
-  box.scrollTop = box.scrollHeight;
+// ===== 表情切り替え =====
+function setFace(emotion) {
+  const pos = FACE_POSITIONS[emotion] || FACE_POSITIONS.normal;
+  document.getElementById('mau-face').style.backgroundPosition = `${pos.x} ${pos.y}`;
 }
 
-function removeTyping() {
-  const el = document.getElementById('typing');
-  if (el) el.remove();
+// ===== 好感度から表情を判定 =====
+function getFaceFromAffection(delta) {
+  if (delta >= 15) return 'happy';
+  if (delta <= -15) return 'angry';
+  if (affection >= 85) return 'dere';
+  if (affection >= 70) return 'happy';
+  if (affection <= 15) return 'angry';
+  if (affection <= 30) return 'sulking';
+  if (Math.abs(delta) <= 3 && affection >= 50) return 'normal';
+  return 'normal';
+}
+
+// ===== キーワードから背景を判定 =====
+function detectBgFromText(text) {
+  for (const [scene, keywords] of Object.entries(BG_KEYWORDS)) {
+    if (keywords.some(kw => text.includes(kw))) return scene;
+  }
+  return null;
+}
+
+// ===== テキストタイプライター =====
+let typeTimer = null;
+function typeText(text, onDone) {
+  const el = document.getElementById('dialogue');
+  el.innerHTML = '';
+  let i = 0;
+  clearInterval(typeTimer);
+  typeTimer = setInterval(() => {
+    if (i < text.length) {
+      el.textContent += text[i++];
+    } else {
+      clearInterval(typeTimer);
+      el.innerHTML += '<span id="cursor"></span>';
+      if (onDone) onDone();
+    }
+  }, 30);
+}
+
+function showTyping() {
+  document.getElementById('dialogue').innerHTML =
+    '<span class="typing-dots"><span></span><span></span><span></span></span>';
 }
 
 // ===== 送信 =====
 async function sendMessage() {
-  const input = document.getElementById('userInput');
-  const btn = document.getElementById('sendBtn');
-  const warn = document.getElementById('rateWarn');
-  const text = input.value.trim();
-
-  if (!text) return;
-
-  // レート制限チェック
-  const rate = checkRateLimit();
-  if (!rate.ok) {
-    warn.textContent = `少し待ってうう… あと${rate.wait}秒`;
-    setTimeout(() => warn.textContent = '', rate.wait * 1000);
+  if (isWaiting) return;
+  if (!checkRateLimit()) {
+    typeText('少し待ってうう…');
     return;
   }
 
-  warn.textContent = '';
+  const input = document.getElementById('player-input');
+  const btn = document.getElementById('send-btn');
+  const text = input.value.trim();
+  if (!text) return;
+
   input.value = '';
-  input.style.height = 'auto';
+  input.disabled = true;
   btn.disabled = true;
+  isWaiting = true;
 
-  // ユーザーメッセージ表示
-  addMsg('user', text);
+  // ユーザー入力から背景を切り替え
+  const detectedBg = detectBgFromText(text);
+  if (detectedBg) setBg(detectedBg);
 
-  // 履歴追加（最大10ターン保持）
   history.push({ role: 'user', content: text });
-  if (history.length > 20) history = history.slice(-20);
+  if (history.length > 16) history = history.slice(-16);
 
-  addTyping();
+  showTyping();
+  setFace('normal');
 
   try {
+    const systemAppend = `
+現在の好感度: ${affection}/100
+返答の最後に必ず以下のJSON1行だけを追加すること:
+{"delta": 数値, "emotion": "感情名"}
+deltaは好感度変化(-20〜+20の整数)。
+emotionは以下から1つ選ぶ: normal / happy / angry / flustered / sulking / shocked / sad / dere`;
+
     const res = await fetch(WORKER_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: history }),
+      body: JSON.stringify({
+        messages: [
+          ...history.slice(-10),
+          { role: 'user', content: text + '\n\n[system]: ' + systemAppend }
+        ]
+      })
     });
 
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    const reply = data.reply || 'うまく聞き取れなかったうう…もう一回言ってう';
+    let reply = data.reply || 'うまく聞こえなかったうう…';
 
-    removeTyping();
-    addMsg('bot', reply);
+    // delta・emotionを抽出
+    let delta = 0;
+    let emotion = null;
+    const match = reply.match(/\{"delta":\s*(-?\d+),\s*"emotion":\s*"([^"]+)"\}/);
+    if (match) {
+      delta = parseInt(match[1]);
+      emotion = match[2];
+      reply = reply.replace(/\{"delta":\s*(-?\d+),\s*"emotion":\s*"([^"]+)"\}/, '').trim();
+    }
+
+    // 好感度更新
+    affection = Math.max(0, Math.min(100, affection + delta));
+    updateGauge();
+
+    // 表情更新（AIが指定した感情 or 好感度から自動判定）
+    setFace(emotion || getFaceFromAffection(delta));
+
+    // AIの返答からも背景を判定
+    const replyBg = detectBgFromText(reply);
+    if (replyBg && !detectedBg) setBg(replyBg);
+
     history.push({ role: 'assistant', content: reply });
+    typeText(reply, () => {
+      isWaiting = false;
+      input.disabled = false;
+      btn.disabled = false;
+      input.focus();
+    });
 
   } catch (e) {
-    removeTyping();
-    addMsg('bot', 'ちょっとうまく繋がれなかったうう…ごめんう、もう一回話しかけてう');
-    console.error(e);
+    typeText('ちょっと繋がれなかったうう…もう一回して');
+    isWaiting = false;
+    input.disabled = false;
+    btn.disabled = false;
   }
-
-  btn.disabled = false;
-  input.focus();
 }
 
-// ===== Enterキーで送信（Shift+Enterは改行） =====
-document.getElementById('userInput').addEventListener('keydown', e => {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    sendMessage();
-  }
+// ===== Enterキー =====
+document.getElementById('player-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); sendMessage(); }
 });
 
-// テキストエリア自動リサイズ
-document.getElementById('userInput').addEventListener('input', function() {
-  this.style.height = 'auto';
-  this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+// ===== 初期化 =====
+updateGauge();
+setBg('default');
+setFace('normal');
+typeText('…来たうう。まあ、入っていいうう。\nで、何の話するう？', () => {
+  document.getElementById('player-input').focus();
 });
-
-// ===== 星を生成 =====
-const starsEl = document.getElementById('stars');
-for (let i = 0; i < 60; i++) {
-  const s = document.createElement('div');
-  s.className = 'star';
-  s.style.left = Math.random() * 100 + '%';
-  s.style.top = Math.random() * 100 + '%';
-  s.style.setProperty('--d', (2 + Math.random() * 4) + 's');
-  s.style.setProperty('--delay', (Math.random() * 5) + 's');
-  starsEl.appendChild(s);
-}
 </script>
 </body>
 </html>
